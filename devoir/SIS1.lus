@@ -1,0 +1,53 @@
+--实数在luciole里面被表示为滑块
+node saturate(E: real) returns (B: bool; S: real);
+let
+    -- 布尔输出 B 当 E > 10.0 或 E < -10.0 时为 true
+    B = (E > 10.0) or (E < -10.0);
+    
+    -- 实际输出 S，当 B 为 true 时为 0.0，否则为 E - 1.0
+    S = if B then 0.0 else E - 1.0;
+    
+tel
+
+--bool在luciole里面用button表示，点击一次前进1 step，。如果想要调整输入（同时把很多输入设为一）需要在clocks里点击compose
+node add1(a,b,c_in : bool) returns (s,c_out : bool);
+let
+   -- 求和部分：s = a ⊕ b ⊕ c_in (XOR运算)
+    s = a xor b xor c_in;
+
+    -- 进位输出部分：c_out = (a ∧ b) ∨ (c_in ∧ (a ⊕ b))
+    c_out = (a and b) or (c_in and (a xor b)); 
+
+tel
+
+--Write a node edge that takes as input a boolean flow input, outputs a boolean flow 
+--output which is true whenever the input flow goes from false to true or from true to false.
+
+node edge(input: bool) returns (output: bool);
+    let
+        output = pre(input) xor input;
+    tel
+
+node counter (reset : bool) returns (output : int);
+    let
+        output= 0 -> if reset then 0 else pre(output)+1;
+    tel
+
+node counter2(reset : bool) returns (output : int);
+        --slow_reset: bool;      -- 用于生成慢速 reset 信号
+        --slow_output: int;      -- 来自基本 counter 节点的缓慢输出流
+       
+    let
+        -- 使用 osc() 来减慢 reset 信号的频率
+        output = current(counter(reset when osc(reset)));  
+    tel
+
+node osc (fgr: bool) returns(flow:bool);
+    let
+        flow = true -> not pre(flow);
+    tel
+
+
+
+
+
