@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+//given constants
+const int LRI = 1000; // longgest gap between 2 V events
+const int URI = 400; // longgest gap between A and V event
+const int AVI = 150;// gap between A and V event
+const int PVARP = 100;// post blank period after each V
+const int VRP = 100; // filter noise no respond time after each V
+
+
+// channels
+chan Aget;  // signal after a normal A send from heart
+chan Vget;  // signal after a normal V send from heart
+chan AP;    // maker wants to pace a A
+chan VP;    // maker wants to pace a V
+chan VS, AS; // V sensed and A sensed
+chan reset_paceV;
+//changable constants
+const int LA = 600; // lowest gap between two A
+const int UA = 1000; // hignest gap between two A
+const int LV = 600; // lowest gap between two V
+const int UV = 1000; // hignest gap between two V 
+
+// To make :
+// if no VS in AVI time after A , gives VP
+//but need to check : V + PVARP+ AVI &gt;= URI
+    </declaration>
+	<template>
+		<name x="5" y="5">HeartVentricle</name>
+		<declaration>
+clock HVclk;// entre [LV, UV]
+
+</declaration>
+		<location id="id0" x="-289" y="-221">
+			<name x="-332" y="-255">VenLV</name>
+		</location>
+		<location id="id1" x="-8" y="-221">
+			<name x="-25" y="-204">VenUV</name>
+		</location>
+		<init ref="id0"/>
+		<transition id="id2">
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="-195" y="-306">Vget!</label>
+			<label kind="assignment" x="-195" y="-289">HVclk := 0</label>
+			<nail x="-127" y="-289"/>
+			<nail x="-221" y="-289"/>
+		</transition>
+		<transition id="id3">
+			<source ref="id1"/>
+			<target ref="id1"/>
+			<label kind="guard" x="68" y="-213">HVclk &lt; UV</label>
+			<label kind="synchronisation" x="69" y="-230">VP?</label>
+			<nail x="60" y="-247"/>
+			<nail x="60" y="-187"/>
+		</transition>
+		<transition id="id4">
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="guard" x="-195" y="-238">HVclk &gt;= LV</label>
+		</transition>
+	</template>
+	<template>
+		<name x="5" y="5">HeartAtrium</name>
+		<declaration>clock HAclk;// entre [LA, UA]
+
+
+        </declaration>
+		<location id="id5" x="-8" y="-110">
+			<name x="-34" y="-85">AtrLA</name>
+		</location>
+		<location id="id6" x="263" y="-110">
+			<name x="229" y="-85">AtrUA</name>
+		</location>
+		<init ref="id5"/>
+		<transition id="id7">
+			<source ref="id5"/>
+			<target ref="id5"/>
+			<nail x="-76" y="-85"/>
+			<nail x="-76" y="-153"/>
+		</transition>
+		<transition id="id8">
+			<source ref="id6"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="85" y="-204">Aget!</label>
+			<label kind="assignment" x="76" y="-187">HAclk := 0</label>
+			<nail x="161" y="-187"/>
+			<nail x="67" y="-187"/>
+		</transition>
+		<transition id="id9">
+			<source ref="id6"/>
+			<target ref="id6"/>
+			<label kind="guard" x="322" y="-127">HAclk &lt; UA</label>
+			<label kind="synchronisation" x="323" y="-144">VP?</label>
+			<nail x="323" y="-153"/>
+			<nail x="323" y="-85"/>
+		</transition>
+		<transition id="id10">
+			<source ref="id5"/>
+			<target ref="id6"/>
+			<label kind="guard" x="93" y="-127">HAclk &gt;= LA</label>
+		</transition>
+	</template>
+	<template>
+		<name>FilterA</name>
+		<declaration>clock FAclk;</declaration>
+		<location id="id11" x="-357" y="-51">
+			<name x="-374" y="-34">IdleFA</name>
+		</location>
+		<location id="id12" x="-17" y="-51">
+			<name x="-25" y="-93">InPVARP</name>
+		</location>
+		<location id="id13" x="-442" y="-110">
+			<name x="-467" y="-144">SendAS</name>
+			<committed/>
+		</location>
+		<init ref="id11"/>
+		<transition id="id14">
+			<source ref="id12"/>
+			<target ref="id11"/>
+			<label kind="guard" x="-238" y="8">FAclk &gt;= PVARP</label>
+			<nail x="-161" y="8"/>
+			<nail x="-246" y="8"/>
+		</transition>
+		<transition id="id15">
+			<source ref="id12"/>
+			<target ref="id12"/>
+			<label kind="guard" x="68" y="-42">FAclk &lt; PVARP</label>
+			<label kind="synchronisation" x="68" y="-59">Aget?</label>
+			<nail x="60" y="-85"/>
+			<nail x="60" y="-8"/>
+		</transition>
+		<transition id="id16">
+			<source ref="id13"/>
+			<target ref="id11"/>
+			<label kind="synchronisation" x="-450" y="-17">AS!</label>
+			<nail x="-442" y="-17"/>
+		</transition>
+		<transition id="id17">
+			<source ref="id11"/>
+			<target ref="id13"/>
+			<label kind="synchronisation" x="-399" y="-102">Aget?</label>
+		</transition>
+		<transition id="id18">
+			<source ref="id11"/>
+			<target ref="id12"/>
+			<label kind="synchronisation" x="-221" y="-127">VS?</label>
+			<label kind="assignment" x="-229" y="-110">FAclk := 0</label>
+			<nail x="-238" y="-110"/>
+			<nail x="-187" y="-110"/>
+		</transition>
+		<transition id="id19">
+			<source ref="id11"/>
+			<target ref="id12"/>
+			<label kind="synchronisation" x="-221" y="-68">VP?</label>
+			<label kind="assignment" x="-229" y="-51">FAclk := 0</label>
+		</transition>
+	</template>
+	<template>
+		<name>FilterV</name>
+		<declaration>clock ck;</declaration>
+		<location id="id20" x="-340" y="-25">
+			<name x="-391" y="-51">IdleFV</name>
+		</location>
+		<location id="id21" x="-144" y="-25">
+			<name x="-170" y="-8">SendVS</name>
+			<committed/>
+		</location>
+		<location id="id22" x="8" y="-25">
+			<name x="0" y="0">InVRP</name>
+		</location>
+		<init ref="id20"/>
+		<transition id="id23">
+			<source ref="id20"/>
+			<target ref="id21"/>
+			<label kind="synchronisation" x="-255" y="-110">Vget?</label>
+			<nail x="-255" y="-85"/>
+			<nail x="-204" y="-85"/>
+		</transition>
+		<transition id="id24">
+			<source ref="id22"/>
+			<target ref="id20"/>
+			<label kind="guard" x="-178" y="25">ck &gt;= VRP</label>
+			<nail x="-84" y="25"/>
+			<nail x="-220" y="25"/>
+		</transition>
+		<transition id="id25">
+			<source ref="id22"/>
+			<target ref="id22"/>
+			<label kind="guard" x="-17" y="-85">ck &lt; VRP</label>
+			<label kind="synchronisation" x="-17" y="-102">Vget?</label>
+			<nail x="25" y="-68"/>
+			<nail x="-17" y="-68"/>
+		</transition>
+		<transition id="id26">
+			<source ref="id21"/>
+			<target ref="id22"/>
+			<label kind="synchronisation" x="-68" y="-42">VS!</label>
+			<label kind="assignment" x="-84" y="-25">ck := 0</label>
+		</transition>
+		<transition id="id27">
+			<source ref="id20"/>
+			<target ref="id21"/>
+			<label kind="synchronisation" x="-204" y="-42">VP?</label>
+		</transition>
+	</template>
+	<template>
+		<name>PaceA</name>
+		<declaration>clock ck;</declaration>
+		<location id="id28" x="-671" y="-229">
+			<name x="-654" y="-272">IdlePA</name>
+		</location>
+		<init ref="id28"/>
+		<transition id="id29">
+			<source ref="id28"/>
+			<target ref="id28"/>
+			<label kind="synchronisation" x="-680" y="-391">AS?</label>
+			<nail x="-646" y="-366"/>
+			<nail x="-697" y="-366"/>
+		</transition>
+		<transition id="id30">
+			<source ref="id28"/>
+			<target ref="id28"/>
+			<label kind="synchronisation" x="-476" y="-255">VP?</label>
+			<label kind="assignment" x="-476" y="-238">ck := 0</label>
+			<nail x="-476" y="-255"/>
+			<nail x="-476" y="-212"/>
+		</transition>
+		<transition id="id31">
+			<source ref="id28"/>
+			<target ref="id28"/>
+			<label kind="synchronisation" x="-705" y="-102">VS?</label>
+			<label kind="assignment" x="-705" y="-85">ck := 0</label>
+			<nail x="-655" y="-102"/>
+			<nail x="-706" y="-102"/>
+		</transition>
+		<transition id="id32">
+			<source ref="id28"/>
+			<target ref="id28"/>
+			<label kind="guard" x="-918" y="-289">ck &gt;= LRI - AVI</label>
+			<label kind="synchronisation" x="-918" y="-272">AP!</label>
+			<nail x="-841" y="-204"/>
+			<nail x="-841" y="-255"/>
+		</transition>
+	</template>
+	<template>
+		<name>PaceV</name>
+		<declaration>clock clk_A;
+clock clk_V;</declaration>
+		<location id="id33" x="-314" y="-76">
+			<name x="-340" y="-51">Waiting</name>
+		</location>
+		<location id="id34" x="-25" y="-76">
+			<name x="-42" y="-110">PacedV</name>
+		</location>
+		<init ref="id33"/>
+		<transition id="id35">
+			<source ref="id33"/>
+			<target ref="id34"/>
+			<label kind="guard" x="-195" y="-102">clk_A &lt;= AVI</label>
+		</transition>
+		<transition id="id36">
+			<source ref="id33"/>
+			<target ref="id33"/>
+			<label kind="synchronisation" x="-356" y="-161">AS?</label>
+			<label kind="assignment" x="-355" y="-144">clk_A := 0</label>
+			<nail x="-254" y="-144"/>
+			<nail x="-373" y="-144"/>
+		</transition>
+		<transition id="id37">
+			<source ref="id33"/>
+			<target ref="id33"/>
+			<label kind="synchronisation" x="-468" y="-102">AP?</label>
+			<label kind="assignment" x="-476" y="-85">clk_A := 0</label>
+			<nail x="-391" y="-110"/>
+			<nail x="-391" y="-59"/>
+		</transition>
+		<transition id="id38">
+			<source ref="id34"/>
+			<target ref="id33"/>
+			<label kind="guard" x="-195" y="-17">clk_V &gt;= URI</label>
+			<label kind="synchronisation" x="-195" y="0">VP!</label>
+			<label kind="assignment" x="-195" y="17">clk_V := 0</label>
+			<nail x="-93" y="-17"/>
+			<nail x="-204" y="-17"/>
+		</transition>
+		<transition id="id39">
+			<source ref="id34"/>
+			<target ref="id34"/>
+			<label kind="guard" x="93" y="-85">clk_V &lt; URI</label>
+			<label kind="synchronisation" x="93" y="-68">reset_paceV?</label>
+			<nail x="68" y="-51"/>
+			<nail x="68" y="-110"/>
+		</transition>
+	</template>
+	<template>
+		<name>PaceVclk</name>
+		<declaration>clock ck;
+        </declaration>
+		<location id="id40" x="-1054" y="-416">
+			<name x="-1079" y="-399">Vpaced</name>
+		</location>
+		<init ref="id40"/>
+		<transition id="id41">
+			<source ref="id40"/>
+			<target ref="id40"/>
+			<label kind="synchronisation" x="-969" y="-442">VS?</label>
+			<label kind="assignment" x="-969" y="-425">ck := 0</label>
+			<nail x="-977" y="-450"/>
+			<nail x="-977" y="-399"/>
+		</transition>
+		<transition id="id42">
+			<source ref="id40"/>
+			<target ref="id40"/>
+			<label kind="synchronisation" x="-1249" y="-425">reset_paceV!</label>
+			<nail x="-1147" y="-399"/>
+			<nail x="-1147" y="-450"/>
+		</transition>
+	</template>
+	<template>
+		<name>Observer</name>
+		<declaration>clock OBclk;</declaration>
+		<location id="id43" x="-119" y="-127">
+			<name x="-187" y="-161">normal</name>
+		</location>
+		<location id="id44" x="195" y="-127">
+			<name x="185" y="-161">MakerTachyc</name>
+			<committed/>
+		</location>
+		<location id="id45" x="-374" y="-127">
+			<name x="-442" y="-161">selfTachyc</name>
+			<committed/>
+		</location>
+		<init ref="id43"/>
+		<transition id="id46">
+			<source ref="id43"/>
+			<target ref="id45"/>
+			<label kind="guard" x="-289" y="-85">OBclk &lt;=URI</label>
+			<label kind="synchronisation" x="-289" y="-68">VS?</label>
+			<nail x="-246" y="-76"/>
+		</transition>
+		<transition id="id47">
+			<source ref="id45"/>
+			<target ref="id43"/>
+			<label kind="assignment" x="-289" y="-144">OBclk :=0</label>
+		</transition>
+		<transition id="id48">
+			<source ref="id43"/>
+			<target ref="id43"/>
+			<label kind="guard" x="-153" y="42">OBclk&gt;=URI</label>
+			<label kind="synchronisation" x="-153" y="59">VP?</label>
+			<label kind="assignment" x="-153" y="76">OBclk:=0</label>
+			<nail x="-89" y="38"/>
+			<nail x="-149" y="38"/>
+		</transition>
+		<transition id="id49">
+			<source ref="id44"/>
+			<target ref="id43"/>
+			<label kind="assignment" x="17" y="-195">OBclk :=0</label>
+			<nail x="34" y="-178"/>
+		</transition>
+		<transition id="id50">
+			<source ref="id43"/>
+			<target ref="id44"/>
+			<label kind="guard" x="-34" y="-144">OBclk&gt; LRI</label>
+			<label kind="synchronisation" x="-34" y="-127">VP?</label>
+		</transition>
+		<transition id="id51">
+			<source ref="id43"/>
+			<target ref="id43"/>
+			<label kind="guard" x="-109" y="-340">OBclk &gt;=URI</label>
+			<label kind="synchronisation" x="-109" y="-323">VS?</label>
+			<label kind="assignment" x="-109" y="-306">OBclk:=0</label>
+			<nail x="-127" y="-306"/>
+			<nail x="-59" y="-306"/>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+HA= HeartAtrium();
+HV= HeartVentricle();
+FA= FilterA();
+FV= FilterV();
+PA= PaceA();
+PV= PaceV();
+PVclk= PaceVclk();
+OB=Observer();
+// List one or more processes to be composed into a system.
+system HA, HV, FA, FV, PA, PV,PVclk,OB;
+    </system>
+	<queries>
+		<query>
+			<formula>A[] not OB.MakerTachyc</formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2024-11-15 19:03:14 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; OB.normal</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-11-15 19:04:46 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; FV.SendVS</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-11-15 19:00:17 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; FA.SendAS</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-11-15 19:00:06 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; FV.InVRP</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-11-15 18:58:36 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; FA.InPVARP</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-11-15 18:58:18 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; PV.PacedV</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-11-15 18:57:10 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; HV.VenUV</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-11-15 19:05:45 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; HA.AtrUA</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-11-15 19:05:20 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] not deadlock</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-11-15 18:46:29 +0100">
+			</result>
+		</query>
+	</queries>
+</nta>
